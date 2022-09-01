@@ -4,14 +4,41 @@ clear all
 rho=1.225%input('Enter fluid density in SI units: ');%Fluid density
 mu=1.849E-5%input('Enter fluid dynamic viscosity in SI units: ');%Dynamic viscosity
 u=15%input('Enter free stream velocity in SI units: ');%Freestream velocity
-L=0.6%input('Enter characteristic length in SI units: ');%Characteristic length
+L=0.01%input('Enter characteristic length in SI units: ');%Characteristic length
+
+%% TYPE OF FLOW INTERNAL/EXTERNAL
+
+Sim_case=lower(input("Enter 'internal' for internal flow simulation, or 'external' for external flow simulation: \n","s"))
+disp(Sim_case)
+
+if strcmp("internal",Sim_case)==1
+    Re_ref=2.3E3
+    tp=0;
+elseif strcmp("external",Sim_case)==1
+    Re_ref=5E5
+    tp=1;
+else
+    error("Wrong input when defining flow simulation case")
+end
+
+%% CHECKING THERMAL SIMULATION
+Sim_case_type=lower(input("Is it a heat transfer simulation?: Y/N \n","s"))
+disp(Sim_case_type)
+
+if strcmp("y",Sim_case_type)==1
+    th=1;
+elseif strcmp("n",Sim_case_type)==1
+    th=0;
+else
+    error("Wrong input when defining thermal simulation case")
+end
 %% BOUNDARY LAYER HEIGHT
 Re=rho*u*L/mu
-if Re>3.5E3*0.9 && Re<3.5E3*1.1
+if Re>Re_ref*0.9 && Re<Re_ref*1.1
     disp('Transition regime')
-    x=input('Choose "Laminar" or "Turbulent": ','s')
+    x=lower(input('Choose "Laminar" or "Turbulent": ','s'))
     disp(x)
-elseif Re>3.5E3
+elseif Re>Re_ref
     disp('Turbulent regime')
     x='Turbulent';
 else
@@ -20,24 +47,30 @@ else
 end
 
 if strcmp('Laminar',x)==1
-    a=input('Enter profile (Blasius, Parabolic, Cubic): ','s' );
-    if strcmp(a,'Blasius')==1
-        d99=4.91*L/sqrt(Re)
-        Cf=0.664/sqrt(Re)
-    elseif strcmp(a,'Parabolic')==1
-        d99=5.48*L/sqrt(Re)
-        Cf=0.730/sqrt(Re)
-    elseif strcmp(a,'Cubic')==1
+    
+    if th==1
+        x="Cubic profile";
+        disp(x)
         d99=4.64*L/sqrt(Re)
         Cf=0.646/sqrt(Re)
     else
-        error('Watch out for capital letters')
+        if tp==1
+            x="Blasius profile";
+            disp(x)
+            d99=4.91*L/sqrt(Re)
+            Cf=0.664/sqrt(Re)
+        else
+            x="Parabolic profile";
+            disp(x)
+            d99=5.48*L/sqrt(Re)
+            Cf=0.730/sqrt(Re)
+        end
     end
 elseif strcmp('Turbulent',x)==1
     d99=0.38*L/Re^0.2
     Cf=0.026/Re^(1/7)
 else
-    error('Watch out for capitals or input errors')
+    error('wrong transition flow treatment entered \n')
 end
 
 %% NUMBER OF LAYERS CALCULATOR
